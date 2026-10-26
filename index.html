@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Gym Progress</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--card2:#222731;--tx:#eef0f4;--mut:#8b93a3;--ac:#4ade80;--onac:#06210f;--acd:#143d26;--warn:#fbbf24;--red:#f87171;--line:#2a303c;--navbg:rgba(18,21,27,.94);--toastbg:#eef0f4;--toasttx:#14171c;color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f2f4f7;--card:#ffffff;--card2:#e8ebf0;--tx:#14171c;--mut:#5a6372;--ac:#15803d;--onac:#ffffff;--acd:#d4f0de;--warn:#b45309;--red:#b91c1c;--line:#d8dce4;--navbg:rgba(255,255,255,.94);--toastbg:#14171c;--toasttx:#eef0f4;color-scheme:light}}
+:root[data-theme="light"]{--bg:#f2f4f7;--card:#ffffff;--card2:#e8ebf0;--tx:#14171c;--mut:#5a6372;--ac:#15803d;--onac:#ffffff;--acd:#d4f0de;--warn:#b45309;--red:#b91c1c;--line:#d8dce4;--navbg:rgba(255,255,255,.94);--toastbg:#14171c;--toasttx:#eef0f4;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,system-ui,"Segoe UI",sans-serif;touch-action:manipulation}
+#app{padding:calc(env(safe-area-inset-top, 0px) + 16px) max(16px, env(safe-area-inset-right, 0px)) calc(96px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));max-width:560px;margin:0 auto}
+h1{font-size:26px;margin:4px 0 14px}
+h2{font-size:18px;margin:0}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+button{font:inherit;color:inherit;border:0;border-radius:12px;padding:12px 14px;background:var(--card2);cursor:pointer}
+button.pri{background:var(--ac);color:var(--onac);font-weight:700}
+button.dng{color:var(--red)}
+button.ghost{background:transparent;color:var(--mut)}
+button.wide{width:100%}
+input,textarea{font:inherit;font-size:17px;color:var(--tx);background:var(--card2);border:0;border-radius:10px;padding:11px 8px;width:100%;text-align:center;min-width:0}
+textarea{text-align:left;font-size:14px;min-height:90px}
+input.l{text-align:left;padding-left:12px}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.exhead b{font-size:17px}
+.hint{color:var(--ac);font-size:14px;margin-bottom:2px}
+.last{color:var(--mut);font-size:13px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:26px 1.2fr 1fr .9fr 48px;gap:8px;align-items:center;margin-bottom:8px}
+.row .n{color:var(--mut);text-align:center}
+.chk{padding:11px 0;font-size:20px;line-height:1;background:var(--card2);color:var(--mut)}
+.row.done input{background:var(--acd)}
+.row.done .chk{background:var(--ac);color:var(--onac);font-weight:800}
+.day{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.day .x{flex:1;min-width:0}
+.day p{margin:2px 0 0;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{display:flex;gap:8px;margin:8px 0 12px}
+.bar button{flex:1}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--navbg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));border-top:1px solid var(--line);z-index:5}
+nav button{flex:1;background:transparent;color:var(--mut);padding:8px 0;font-size:12px}
+nav button.on{color:var(--ac)}
+nav span{display:block;font-size:20px}
+#timer{position:fixed;left:max(12px, env(safe-area-inset-left, 0px));right:max(12px, env(safe-area-inset-right, 0px));bottom:calc(68px + env(safe-area-inset-bottom, 0px));background:var(--ac);color:var(--onac);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;z-index:6;box-shadow:0 6px 24px #0008}
+#timer b{font-size:24px;font-variant-numeric:tabular-nums;flex:1}
+#timer button{background:rgba(0,0,0,.18);color:var(--onac);padding:8px 12px;font-weight:700}
+.modal{position:fixed;inset:0;background:#000a;z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:16px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));max-height:88vh;overflow:auto}
+.sheet svg{width:100%;height:auto;display:block;margin:8px 0}
+.g5{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.g5 label{font-size:11px;color:var(--mut);display:block;text-align:center;margin-bottom:3px}
+.g5 input{padding:9px 2px;font-size:15px}
+.hrow{display:flex;gap:6px;margin-top:10px}
+.hrow button{flex:1;padding:9px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(130px + env(safe-area-inset-bottom, 0px));background:var(--toastbg);color:var(--toasttx);padding:10px 16px;border-radius:12px;z-index:20;font-size:14px;max-width:90%}
+.tag{display:inline-block;background:var(--acd);color:var(--ac);border-radius:8px;padding:2px 8px;font-size:12px}
+ul.s{margin:6px 0 0;padding-left:18px;font-size:14px}
+.exhead b[data-act]{text-decoration:underline dotted;text-underline-offset:4px;text-decoration-color:var(--mut)}
+.guide{margin:2px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.lab{text-transform:uppercase;letter-spacing:.06em;margin-top:8px}
+.gd{margin:8px 0;font-size:15px;line-height:1.5}
+.gd b{color:var(--ac)}
+.big{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.chips{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:14px}
+.up{color:var(--ac)}.dn{color:var(--red)}.flat{color:var(--mut)}
+.prow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}
+.prow .big{font-size:26px}
+.prow .col{flex:1;min-width:130px}
+.spark{width:84px;height:28px;flex:none}
+.card>svg{width:100%;height:auto;display:block;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="timer" hidden><span>Pause</span><b id="tleft">0:00</b><button data-act="tplus">+15 s</button><button data-act="tstop">Stopp</button></div>
+<div id="modal" hidden></div>
+<nav>
+  <button data-act="nav" data-v="train"><span>🏋️</span>Training</button>
+  <button data-act="nav" data-v="hist"><span>📅</span>Verlauf</button>
+  <button data-act="nav" data-v="power"><span>📈</span>Kraft</button>
+  <button data-act="nav" data-v="plan"><span>📝</span>Plan</button>
+  <button data-act="nav" data-v="more"><span>⚙️</span>Mehr</button>
+</nav>
+
+<script>
+(function(){
+'use strict';
+var KEY='gymapp.v1',PREVIEW=false;
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var num=function(v){var n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:n};
+var rnd=function(n){return Math.round(n*100)/100};
+var fmt=function(n){return n==null||n===''?'':String(rnd(n)).replace('.',',')};
+var uid=function(){return Math.random().toString(36).slice(2,9)};
+var pad=function(n){return String(n).padStart(2,'0')};
+var today=function(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+var fdate=function(iso){return new Date(iso+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'})};
+var e1rm=function(w,r){return r<=1?w:w*(1+r/30)};
+var se1=function(s){return e1rm(s.w,s.r+(s.rir||0))};
+var fdateShort=function(iso){return iso.slice(8,10)+'.'+iso.slice(5,7)+'.'};
+function targetRir(e){return e.rir!=null&&!isNaN(e.rir)?e.rir:2}
+
+/* ---------- Ausführungs-Anleitungen (Standardtexte, im Plan-Editor überschreibbar) ---------- */
+var GUIDE={
+ 'bankdrücken':'Start: Flach auf die Bank legen, Augen unter der Stange. Schulterblätter zusammen- und nach unten ziehen, Füße fest am Boden, leichtes Hohlkreuz, das Gesäß bleibt auf der Bank. Griff etwas breiter als schulterbreit, Handgelenke gerade über den Unterarmen.\nAusführung: Stange kontrolliert zur unteren Brust senken (Unterarme senkrecht, Ellbogen etwa 45–75° vom Körper). Kurz berühren oder knapp darüber stoppen, dann kräftig hochdrücken, leicht Richtung Gesicht. Oben die Arme strecken, die Schultern bleiben hinten.\nFehler: Gesäß hebt ab, Ellbogen auf 90° abgespreizt, Stange wird von der Brust abgefedert, Handgelenke knicken ab.',
+ 'schrägbankdrücken kh':'Start: Bank auf etwa 30° stellen. Hanteln auf die Oberschenkel, hinsetzen und mit Schwung in die Startposition bringen. Schulterblätter fest zusammen, Füße am Boden.\nAusführung: Hanteln über der oberen Brust starten, kontrolliert absenken bis etwa auf Brusthöhe (Ellbogen ca. 45–60° vom Körper), dann hochdrücken. Oben die Hanteln nicht gegeneinander schlagen.\nFehler: Bank zu steil (belastet die Schulter), Ellbogen zu weit nach außen, Schwung aus dem Rücken, Hanteln zu tief und ohne Kontrolle.',
+ 'schulterdrücken':'Start: Aufrecht stehen oder sitzen, Rumpf und Gesäß fest anspannen. Gewicht auf Schulterhöhe, Unterarme senkrecht.\nAusführung: Das Gewicht senkrecht über den Kopf drücken. Der Kopf geht kurz zurück, damit die Hantel nah am Gesicht vorbeikommt, oben liegt sie über den Schultern. Kontrolliert wieder bis Schulter- bzw. Kinnhöhe absenken.\nFehler: Starkes Hohlkreuz, Gewicht wandert nach vorn, Schultern werden zu den Ohren hochgezogen.',
+ 'seitheben':'Start: Aufrecht, leichte Hanteln seitlich, Ellbogen leicht gebeugt, Oberkörper minimal nach vorn geneigt.\nAusführung: Die Arme seitlich bis etwa Schulterhöhe anheben, die Ellbogen führen die Bewegung. Oben kurz halten, dann langsam (2–3 Sekunden) absenken.\nFehler: Schwung aus dem Körper, Schultern hochgezogen, Gewicht zu schwer, Hände höher als die Ellbogen.',
+ 'trizeps-drücken am kabel':'Start: Aufrecht, leicht vorgebeugt, Griff auf Brusthöhe. Ellbogen fest an den Rippen.\nAusführung: Nach unten strecken, bis die Arme gerade sind, kurz anspannen. Langsam zurück, bis die Unterarme etwa waagerecht sind. Die Ellbogen bleiben die ganze Zeit an derselben Stelle.\nFehler: Ellbogen wandern nach vorn oder hinten, Oberkörper drückt mit, Schultern hochgezogen.',
+ 'latzug':'Start: Oberschenkel unter dem Polster fixieren, Griff etwas breiter als schulterbreit (Obergriff). Brust raus, Oberkörper leicht zurückgelehnt (ca. 10–15°).\nAusführung: Die Stange zur oberen Brust ziehen. Erst die Schulterblätter nach unten, dann die Ellbogen nach unten und hinten führen. Oben kurz halten, dann kontrolliert nach oben lassen, bis die Arme gestreckt sind.\nFehler: Schwung aus dem Rücken, Stange hinter den Nacken ziehen, nur mit den Armen ziehen, Schultern hochgezogen.',
+ 'rudern am kabel':'Start: Füße auf den Platten, Knie leicht gebeugt, Rücken aufrecht, Brust raus. Arme gestreckt, Schulterblätter locker nach vorn.\nAusführung: Den Griff zum Bauchnabel ziehen, die Ellbogen eng am Körper nach hinten, die Schulterblätter am Ende zusammenziehen und eine Sekunde halten. Langsam zurück in die Streckung.\nFehler: Oberkörper schaukelt vor und zurück, Rundrücken, Schultern hochgezogen, Ruck statt Zug.',
+ 'face pulls':'Start: Seilzug auf Gesichtshöhe, Seil mit Daumen zu dir greifen, einen Schritt zurück, Rumpf stabil, Gewicht tragen.\nAusführung: Das Seil Richtung Stirn bzw. Augen ziehen. Die Ellbogen bleiben hoch und gehen weit nach außen, die Hände trennen sich neben den Ohren. Schulterblätter zusammen, kurz halten, langsam zurück.\nFehler: Zu schweres Gewicht (Hohlkreuz, Schwung), Ellbogen fallen nach unten, Seil wird zur Brust statt zum Gesicht gezogen.',
+ 'bizeps-curls':'Start: Aufrecht, Hanteln seitlich, Handflächen nach vorn, Ellbogen an den Körper.\nAusführung: Die Arme beugen, bis der Bizeps voll angespannt ist, oben kurz halten. Dann langsam (2–3 Sekunden) bis fast zur Streckung absenken.\nFehler: Schwung aus Hüfte und Rücken, Ellbogen wandern nach vorn, unten nicht ganz gestreckt, zu schnelles Absenken.',
+ 'kniebeuge':'Start: Stange fest auf dem oberen Rücken, Hände greifen fest zu. Stand etwa schulterbreit, Füße leicht nach außen gedreht. Tief in den Bauch atmen, Rumpf fest anspannen, Brust raus.\nAusführung: Hüfte und Knie gleichzeitig beugen, die Knie folgen der Fußrichtung. Absenken, bis die Oberschenkel mindestens waagerecht sind, solange der Rücken gerade bleibt. Das Gewicht liegt über dem Mittelfuß. Dann kräftig nach oben drücken, die Brust voran.\nFehler: Knie fallen nach innen, Fersen heben ab, Rücken rundet unten ein, die Hüfte schießt vor den Schultern nach oben. Rack-Höhe und Sicherheitsstangen passend einstellen.',
+ 'rumänisches kreuzheben':'Start: Stange vor den Oberschenkeln, Stand hüftbreit, Knie leicht gebeugt und so bleibend. Rücken neutral, Schulterblätter fest.\nAusführung: Die Hüfte weit nach hinten schieben, die Stange dicht am Körper nach unten gleiten lassen, bis die Oberschenkelrückseite deutlich gedehnt ist (etwa Kniehöhe bis Schienbeinmitte). Dann die Hüfte nach vorn schieben und aufrichten. Oben das Gesäß anspannen, nicht überstrecken.\nFehler: Rundrücken, Knie beugen sich immer mehr (wird zur Kniebeuge), Stange wandert vom Körper weg, Hohlkreuz am Ende.',
+ 'beinpresse':'Start: Rücken und Gesäß flach am Polster, Füße etwa schulterbreit mittig auf der Platte, Knie zeigen in Richtung der Zehen.\nAusführung: Sicherung lösen, die Knie beugen bis ca. 90°, aber nur so tief, dass das Becken am Polster bleibt. Dann mit dem ganzen Fuß wegdrücken. Oben die Knie nicht komplett durchdrücken.\nFehler: Das Becken rollt ein und hebt ab, Knie fallen nach innen, Knie werden oben eingerastet, die Fersen heben ab.',
+ 'wadenheben':'Start: Fußballen auf eine Kante, Fersen frei, Knie fast gestreckt, aufrecht.\nAusführung: Tief absenken bis zur vollen Dehnung (eine Sekunde halten), dann so hoch wie möglich auf die Zehenspitzen drücken und oben wieder eine Sekunde halten. Langsam absenken.\nFehler: Wippen mit Schwung, nur halber Weg, Knie beugen und strecken mit.'
+};
+function guideFor(e){return (e.howto&&e.howto.trim())||GUIDE[String(e.name||'').trim().toLowerCase()]||''}
+function guideHTML(txt){
+  if(!txt)return '<div class="mut small">Noch keine Beschreibung. Im Plan-Editor kannst du bei dieser Übung eine eintragen.</div>';
+  return txt.split('\n').filter(function(l){return l.trim()}).map(function(l){
+    var m=l.match(/^([A-Za-zÄÖÜäöüß ]{2,20}):\s*([\s\S]*)$/);
+    return m?'<p class="gd"><b>'+esc(m[1])+'</b> '+esc(m[2])+'</p>':'<p class="gd">'+esc(l)+'</p>';
+  }).join('');
+}
+
+function ex(name,sets,min,max,inc,start){return {id:uid(),name:name,sets:sets,repMin:min,repMax:max,inc:inc,startWeight:start,rir:2}}
+function defaults(){
+  return {
+    plan:[
+      {id:uid(),name:'Push',exercises:[ex('Bankdrücken',3,6,10,2.5,40),ex('Schrägbankdrücken KH',3,8,12,2,16),ex('Schulterdrücken',3,8,12,2.5,30),ex('Seitheben',3,12,20,1,8),ex('Trizeps-Drücken am Kabel',3,10,15,2.5,25)]},
+      {id:uid(),name:'Pull',exercises:[ex('Latzug',3,8,12,2.5,50),ex('Rudern am Kabel',3,8,12,2.5,50),ex('Face Pulls',3,12,20,2.5,20),ex('Bizeps-Curls',3,8,12,1,10)]},
+      {id:uid(),name:'Beine',exercises:[ex('Kniebeuge',3,5,8,2.5,50),ex('Rumänisches Kreuzheben',3,8,10,2.5,50),ex('Beinpresse',3,10,15,5,100),ex('Wadenheben',3,10,15,2.5,40)]}
+    ],
+    logs:[],draft:null,settings:{rest:90},lastBackup:null
+  };
+}
+function load(){
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.plan)&&Array.isArray(s.logs)){s.settings=s.settings||{rest:90};return s}}catch(e){}
+  return defaults();
+}
+var S=load(),view='train',detailEx=null,summary=null,timer=null,timerEnd=0,ac=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Speichern fehlgeschlagen – Speicher voll?')}}
+function toast(t){var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
+
+/* ---------- Daten & Progression ---------- */
+function findEx(id){for(var i=0;i<S.plan.length;i++){var e=S.plan[i].exercises.find(function(x){return x.id===id});if(e)return e}return null}
+function entriesFor(exId){
+  var out=[];
+  S.logs.forEach(function(l){var en=l.entries.find(function(e){return e.exId===exId});if(en&&en.sets.length)out.push({date:l.date,sets:en.sets})});
+  out.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0});
+  return out;
+}
+function suggest(e){
+  var all=entriesFor(e.id),last=all[all.length-1];
+  if(!last)return {w:e.startWeight,r:e.repMin,note:'Erste Einheit – Startgewicht'};
+  var top=Math.max.apply(null,last.sets.map(function(s){return s.w}));
+  var atTop=last.sets.filter(function(s){return s.w===top});
+  if(atTop.length>=e.sets&&atTop.every(function(s){return s.r>=e.repMax}))
+    return {w:rnd(top+e.inc),r:e.repMin,note:'Alle Sätze bei '+e.repMax+' Wdh. – Gewicht rauf'};
+  var minR=Math.min.apply(null,atTop.map(function(s){return s.r}));
+  var rirs=atTop.filter(function(s){return s.rir!=null}).map(function(s){return s.rir});
+  if(rirs.length){
+    var avg=rirs.reduce(function(a,b){return a+b},0)/rirs.length,t=targetRir(e);
+    if(avg>=t+2&&minR>=e.repMin)return {w:rnd(top+e.inc),r:e.repMin,note:'Zu leicht (RIR '+fmt(avg)+') – Gewicht rauf'};
+    if(avg<t-1)return {w:top,r:Math.min(e.repMax,minR),note:'Sehr hart (RIR '+fmt(avg)+') – Wdh. halten'};
+  }
+  return {w:top,r:Math.min(e.repMax,minR+1),note:'Gleiches Gewicht, 1 Wdh. mehr pro Satz'};
+}
+function setsText(sets){return sets.map(function(s){return fmt(s.w)+'×'+s.r+(s.rir!=null?' (RIR '+s.rir+')':'')}).join(', ')}
+
+/* ---------- Views ---------- */
+function trainHTML(){
+  var h='<h1>Training</h1>';
+  if(S.logs.length>=3){
+    var lb=S.lastBackup,days=lb?Math.floor((Date.now()-lb)/864e5):null;
+    if(lb==null||days>30)h+='<div class="card small" style="border:1px solid var(--warn)">⚠️ '+(lb==null?'Noch kein Backup.':'Letztes Backup vor '+days+' Tagen.')+' Unter „Mehr“ kannst du deine Daten sichern.</div>';
+  }
+  if(!S.plan.length)return h+'<div class="card">Noch kein Plan. Lege unter „Plan“ deine Trainingstage an.</div>';
+  S.plan.forEach(function(d){
+    var lastLog=S.logs.filter(function(l){return l.dayId===d.id}).map(function(l){return l.date}).sort().pop();
+    h+='<div class="card day"><div class="x"><h2>'+esc(d.name)+'</h2><p>'+(d.exercises.map(function(e){return esc(e.name)}).join(' · ')||'keine Übungen')+'</p><p>'+(lastLog?'Zuletzt: '+fdate(lastLog):'Noch nie trainiert')+'</p></div><button class="pri" data-act="start" data-d="'+d.id+'">Start</button></div>';
+  });
+  return h;
+}
+function workoutHTML(){
+  var dr=S.draft,day=S.plan.find(function(d){return d.id===dr.dayId});
+  if(!day){S.draft=null;save();return trainHTML()}
+  var h='<h1>'+esc(day.name)+'</h1><div class="mut small" style="margin:-8px 0 12px">'+fdate(dr.date)+' · Tippe auf einen Übungsnamen für Ausführung und Verlauf. RIR = Wiederholungen, die du noch geschafft hättest (0 = Muskelversagen).</div>';
+  day.exercises.forEach(function(e){
+    if(!dr.sets[e.id])dr.sets[e.id]=[];
+    var sg=suggest(e),all=entriesFor(e.id),last=all[all.length-1],rows='';
+    dr.sets[e.id].forEach(function(s,i){
+      rows+='<div class="row'+(s.done?' done':'')+'" data-row="'+e.id+'-'+i+'"><span class="n">'+(i+1)+'</span>'+
+        '<input inputmode="decimal" placeholder="kg" value="'+esc(s.w)+'" data-in="set" data-ex="'+e.id+'" data-i="'+i+'" data-f="w">'+
+        '<input inputmode="numeric" placeholder="'+sg.r+'" value="'+esc(s.r)+'" data-in="set" data-ex="'+e.id+'" data-i="'+i+'" data-f="r">'+
+        '<input inputmode="numeric" placeholder="RIR" value="'+esc(s.rir==null?'':s.rir)+'" data-in="set" data-ex="'+e.id+'" data-i="'+i+'" data-f="rir">'+
+        '<button class="chk" data-act="toggle" data-ex="'+e.id+'" data-i="'+i+'">✓</button></div>';
+    });
+    h+='<div class="card"><div class="exhead"><b data-act="detail" data-ex="'+e.id+'">'+esc(e.name)+'</b><span class="mut small">'+e.sets+'×'+e.repMin+'–'+e.repMax+'</span></div>'+
+      '<div class="hint">Ziel: '+fmt(sg.w)+' kg × '+sg.r+'+ (Ziel-RIR '+targetRir(e)+') · '+esc(sg.note)+'</div>'+
+      '<div class="last">'+(last?'Letztes Mal ('+fdate(last.date)+'): '+esc(setsText(last.sets)):'Noch keine Daten')+'</div>'+rows+
+      '<div class="hrow"><button class="ghost" data-act="delset" data-ex="'+e.id+'">− Satz</button><button class="ghost" data-act="addset" data-ex="'+e.id+'">+ Satz</button></div></div>';
+  });
+  h+='<button class="pri wide" data-act="finish">Training beenden</button><div class="bar"><button class="ghost dng" data-act="cancel">Abbrechen (verwerfen)</button></div>';
+  return h;
+}
+function summaryHTML(){
+  if(!summary)return trainHTML();
+  var h='<h1>Gespeichert ✅</h1><div class="mut" style="margin:-8px 0 14px">'+esc(summary.dayName)+'</div>';
+  summary.items.forEach(function(it){
+    h+='<div class="card"><b>'+esc(it.name)+'</b>'+(it.pr?' <span class="tag">Neuer Bestwert</span>':'')+'<div class="mut small" style="margin-top:4px">Heute: '+esc(setsText(it.sets))+'</div><div class="hint" style="margin-top:6px">Nächstes Mal: '+fmt(it.next.w)+' kg × '+it.next.r+'+ · '+esc(it.next.note)+'</div></div>';
+  });
+  return h+'<button class="pri wide" data-act="summaryok">Fertig</button>';
+}
+function histHTML(){
+  var h='<h1>Verlauf</h1>';
+  if(!S.logs.length)return h+'<div class="card mut">Noch keine Trainings gespeichert.</div>';
+  S.logs.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1)}).forEach(function(l){
+    h+='<div class="card"><div class="exhead"><b>'+esc(l.dayName)+'</b><span class="mut small">'+fdate(l.date)+'</span></div><ul class="s">'+
+      l.entries.filter(function(e){return e.sets.length}).map(function(e){return '<li><b>'+esc(e.name)+'</b>: '+esc(setsText(e.sets))+'</li>'}).join('')+
+      '</ul><div class="hrow"><button class="ghost dng" data-act="dellog" data-id="'+l.id+'">Löschen</button></div></div>';
+  });
+  return h;
+}
+function planHTML(){
+  var h='<h1>Plan</h1><div class="mut small" style="margin:-8px 0 12px">Wdh.-Bereich: Schaffst du in allen Sätzen die obere Zahl, steigt das Gewicht um „+kg“. „Start“ ist das Gewicht der ersten Einheit. „Ziel-RIR“ sagt, wie viele Wiederholungen du am Satzende noch übrig haben sollst; liegst du deutlich darüber oder darunter, passt die App den Vorschlag an.</div>';
+  S.plan.forEach(function(d,di){
+    h+='<div class="card"><input class="l" data-in="plan" data-d="'+di+'" data-f="dname" value="'+esc(d.name)+'" placeholder="Name des Tages" style="font-weight:700">';
+    d.exercises.forEach(function(e,ei){
+      h+='<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><input class="l" data-in="plan" data-d="'+di+'" data-e="'+ei+'" data-f="name" value="'+esc(e.name)+'" placeholder="Übung">'+
+        '<div class="g5">'+
+        planField(di,ei,'sets','Sätze',e.sets,'numeric')+planField(di,ei,'repMin','Wdh min',e.repMin,'numeric')+planField(di,ei,'repMax','Wdh max',e.repMax,'numeric')+planField(di,ei,'inc','+ kg',fmt(e.inc),'decimal')+planField(di,ei,'startWeight','Start kg',fmt(e.startWeight),'decimal')+planField(di,ei,'rir','Ziel-RIR',targetRir(e),'numeric')+
+        '</div><textarea data-in="plan" data-d="'+di+'" data-e="'+ei+'" data-f="howto" rows="6" placeholder="Ausführung (Start: … / Ausführung: … / Fehler: …)" style="margin-top:8px">'+esc(guideFor(e))+'</textarea><div class="hrow"><button data-act="exup" data-d="'+di+'" data-e="'+ei+'">↑</button><button data-act="exdown" data-d="'+di+'" data-e="'+ei+'">↓</button><button class="dng" data-act="delex" data-d="'+di+'" data-e="'+ei+'">Entfernen</button></div></div>';
+    });
+    h+='<div class="hrow"><button data-act="addex" data-d="'+di+'">+ Übung</button><button class="dng" data-act="delday" data-d="'+di+'">Tag löschen</button></div></div>';
+  });
+  return h+'<button class="wide" data-act="addday">+ Trainingstag</button>';
+}
+function planField(di,ei,f,label,val,mode){
+  return '<div><label>'+label+'</label><input inputmode="'+mode+'" data-in="plan" data-d="'+di+'" data-e="'+ei+'" data-f="'+f+'" value="'+esc(val)+'"></div>';
+}
+/* ---------- Kraft: geschätztes 1RM und Kraftindex ---------- */
+function bestE1(sets){
+  var okSets=sets.filter(function(s){return s.r+(s.rir||0)<=12});
+  var use=okSets.length?okSets:sets;
+  return Math.max.apply(null,use.map(se1));
+}
+function series(exId){return entriesFor(exId).map(function(en){return {date:en.date,v:bestE1(en.sets)}})}
+function daysAgoISO(n){var d=new Date();d.setDate(d.getDate()-n);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function valueAt(ser,date){var v=null;ser.forEach(function(p){if(p.date<=date)v=p.v});return v}
+function strengthData(){
+  var items=[],dset={};
+  S.plan.forEach(function(d){d.exercises.forEach(function(e){
+    var ser=series(e.id);if(!ser.length)return;
+    ser.forEach(function(p){dset[p.date]=1});
+    items.push({e:e,day:d.name,ser:ser});
+  })});
+  // Kettenindex: Von Termin zu Termin das mittlere Verhältnis der Übungen, die an beiden Terminen einen Wert haben.
+  // So verzerren neu hinzugekommene Übungen den Index nicht.
+  var ds=Object.keys(dset).sort(),idx=[],level=100,prev=null;
+  ds.forEach(function(dt){
+    if(prev){
+      var rs=[];
+      items.forEach(function(it){var a=valueAt(it.ser,prev),b=valueAt(it.ser,dt);if(a!=null&&b!=null&&a>0)rs.push(b/a)});
+      if(rs.length)level*=rs.reduce(function(a,b){return a+b},0)/rs.length;
+    }
+    idx.push({date:dt,v:level});prev=dt;
+  });
+  return {items:items,idx:idx};
+}
+function pctHTML(p,label){
+  if(p==null)return '';
+  var c=p>=1?'up':p<=-1?'dn':'flat',ar=p>=1?'▲':p<=-1?'▼':'▬';
+  return '<span class="'+c+'">'+ar+' '+(p>0?'+':'')+fmt(Math.round(p*10)/10)+' % '+label+'</span>';
+}
+function sparkSVG(vals){
+  if(vals.length<2)return '';
+  var W=84,H=28,lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);
+  if(hi-lo<0.001){hi+=1;lo-=1}
+  var pts=vals.map(function(v,i){return (2+i*(W-4)/(vals.length-1)).toFixed(1)+','+(H-3-(v-lo)/(hi-lo)*(H-6)).toFixed(1)}).join(' ');
+  return '<svg class="spark" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><polyline points="'+pts+'" style="fill:none;stroke:var(--ac)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+}
+function powerHTML(){
+  var D=strengthData(),cut=daysAgoISO(28),h='<h1>Kraft</h1>'+
+    '<div class="mut small" style="margin:-8px 0 12px">Maß ist dein geschätztes Einwiederholungsmaximum (1RM): das Gewicht, das du rechnerisch einmal bewegen könntest. Es wird aus deinem besten Satz berechnet (Wiederholungen plus RIR, Formel nach Epley). Sätze mit mehr als 12 Wiederholungen zählen nicht, weil die Schätzung dann zu ungenau wird. Tagesform schwankt, achte deshalb auf den Trend über mehrere Wochen.</div>';
+  if(!D.items.length)return h+'<div class="card mut">Sobald du Trainings gespeichert hast, siehst du hier, ob du stärker wirst.</div>';
+  var idx=D.idx,cur=idx[idx.length-1].v,ref=null;
+  idx.forEach(function(p){if(p.date<=cut)ref=p.v});
+  var d4=(ref!=null&&idx[idx.length-1].date>cut)?(cur/ref-1)*100:null,dS=idx.length>1?cur-100:null;
+  h+='<div class="card"><div class="mut small lab">Kraftindex</div><div class="big">'+fmt(Math.round(cur*10)/10)+'</div>'+
+    '<div class="mut small">Start = 100, Mittelwert über alle Übungen. 110 heißt: im Schnitt 10 % stärker als am Anfang.</div>'+
+    '<div class="chips">'+pctHTML(dS,'seit Start')+pctHTML(d4,'letzte 4 Wochen')+(dS!=null&&d4==null?'<span class="flat">4-Wochen-Vergleich ab 4 Wochen Daten</span>':'')+'</div>'+
+    (idx.length>1?chartSVG(idx.map(function(p){return {y:Math.round(p.v*10)/10,x:fdateShort(p.date)}})):'<div class="mut small" style="margin-top:10px">Nach dem zweiten Trainingstag erscheint hier der Verlauf.</div>')+'</div>';
+  D.items.forEach(function(it){
+    var ser=it.ser,last=ser[ser.length-1],base=ser[0].v,rv=valueAt(ser,cut);
+    var dS2=ser.length>1?(last.v/base-1)*100:null,d42=(rv!=null&&ser.length>1&&last.date>cut)?(last.v/rv-1)*100:null;
+    h+='<div class="card"><div class="exhead"><b data-act="detail" data-ex="'+it.e.id+'">'+esc(it.e.name)+'</b><span class="mut small">'+esc(it.day)+'</span></div>'+
+      '<div class="prow"><div class="col"><div class="big">'+fmt(Math.round(last.v*10)/10)+' kg</div><div class="mut small">geschätztes 1RM · '+ser.length+' Einheit'+(ser.length>1?'en':'')+'</div></div>'+
+      sparkSVG(ser.map(function(p){return p.v}))+'</div>'+
+      '<div class="chips">'+(dS2==null?'<span class="flat">Noch ein Training nötig für den Vergleich</span>':pctHTML(dS2,'seit Start')+pctHTML(d42,'letzte 4 Wochen'))+'</div></div>';
+  });
+  return h;
+}
+
+function moreHTML(){
+  var lb=S.lastBackup?new Date(S.lastBackup).toLocaleDateString('de-DE'):'noch nie';
+  return '<h1>Mehr</h1>'+
+  '<div class="card"><b>Pausentimer</b><div class="mut small" style="margin:2px 0 8px">Startet automatisch, wenn du einen Satz abhakst.</div><div style="display:flex;align-items:center;gap:10px"><input inputmode="numeric" data-in="rest" value="'+(S.settings.rest||90)+'" style="max-width:100px"><span class="mut">Sekunden</span></div></div>'+
+  (PREVIEW?'<div class="card"><b>Vorschau</b><div class="mut small" style="margin:2px 0 10px">Füllt den Verlauf mit 6 erfundenen Wochen, damit du Diagramme und Vorschläge siehst. Ersetzt deine bisherigen Einträge.</div><button class="wide" data-act="demo">Beispieldaten laden</button></div>':'')+
+  '<div class="card"><b>Backup</b><div class="mut small" style="margin:2px 0 10px">Alle Daten liegen nur auf diesem iPhone. Sichere sie ab und zu (Letztes Backup: '+lb+').</div><button class="wide" data-act="export">Backup teilen / kopieren</button>'+
+  '<textarea id="imp" placeholder="Zum Wiederherstellen: Backup-Text hier einfügen" style="margin-top:10px"></textarea><button class="wide" data-act="import" style="margin-top:8px">Aus Text wiederherstellen</button></div>'+
+  '<div class="card"><button class="wide dng" data-act="wipe">Alle Daten löschen</button></div>'+
+  '<div class="mut small" style="text-align:center">Gym Progress · läuft komplett offline</div>';
+}
+function render(){
+  var h;
+  if(view==='train')h=S.draft?workoutHTML():trainHTML();
+  else if(view==='summary')h=summaryHTML();
+  else if(view==='hist')h=histHTML();
+  else if(view==='power')h=powerHTML();
+  else if(view==='plan')h=planHTML();
+  else h=moreHTML();
+  $('#app').innerHTML=h;
+  document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===view||(view==='summary'&&b.dataset.v==='train'))});
+}
+
+/* ---------- Detail / Chart ---------- */
+function chartSVG(pts){
+  var W=320,H=150,P=26,ys=pts.map(function(p){return p.y}),lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);
+  if(hi-lo<1){hi+=1;lo-=1}
+  var X=function(i){return pts.length===1?W/2:P+i*(W-2*P)/(pts.length-1)};
+  var Y=function(v){return H-P-(v-lo)/(hi-lo)*(H-2*P)};
+  var line=pts.map(function(p,i){return X(i)+','+Y(p.y)}).join(' ');
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Verlauf">'+
+    '<line x1="'+P+'" y1="'+(H-P)+'" x2="'+(W-P)+'" y2="'+(H-P)+'" style="stroke:var(--line)"/>'+
+    '<text x="2" y="'+(Y(hi)+4)+'" style="fill:var(--mut)" font-size="10">'+fmt(hi)+'</text><text x="2" y="'+(Y(lo)+4)+'" style="fill:var(--mut)" font-size="10">'+fmt(lo)+'</text>'+
+    (pts.length>1?'<polyline points="'+line+'" style="fill:none;stroke:var(--ac)" stroke-width="2.5" stroke-linejoin="round"/>':'');
+  pts.forEach(function(p,i){s+='<circle cx="'+X(i)+'" cy="'+Y(p.y)+'" r="4" style="fill:var(--ac)"/>'});
+  if(pts[0].x){
+    s+='<text x="'+P+'" y="'+(H-8)+'" style="fill:var(--mut)" font-size="10">'+esc(pts[0].x)+'</text>';
+    if(pts.length>1)s+='<text x="'+(W-P)+'" y="'+(H-8)+'" text-anchor="end" style="fill:var(--mut)" font-size="10">'+esc(pts[pts.length-1].x)+'</text>';
+  }
+  return s+'</svg>';
+}
+function showDetail(id){
+  var e=findEx(id);if(!e)return;
+  var all=entriesFor(id),h='<div class="sheet"><div class="exhead"><h2>'+esc(e.name)+'</h2><button class="ghost" data-act="closedetail">Schließen</button></div>'+
+    '<div class="guide"><div class="mut small lab">Ausführung</div>'+guideHTML(guideFor(e))+'</div>';
+  if(!all.length)h+='<div class="mut">Noch keine Daten. Nach dem ersten Training erscheint hier dein Verlauf.</div>';
+  else{
+    var pts=all.map(function(en){return {y:bestE1(en.sets),x:fdateShort(en.date)}});
+    var best=null;
+    all.forEach(function(en){en.sets.forEach(function(s){if(!best||se1(s)>se1(best))best=s})});
+    h+='<div class="mut small">Geschätztes 1RM pro Einheit in kg (RIR eingerechnet)</div>'+chartSVG(pts)+'<div class="small">Bester Satz: <b>'+fmt(best.w)+' kg × '+best.r+'</b> (≈ '+fmt(Math.round(se1(best)*10)/10)+' kg 1RM)</div><ul class="s">';
+    all.slice(-6).reverse().forEach(function(en){h+='<li>'+fdate(en.date)+': '+esc(setsText(en.sets))+'</li>'});
+    h+='</ul>';
+  }
+  $('#modal').innerHTML='<div class="modal" data-act="closeov">'+h+'</div></div>';
+  $('#modal').hidden=false;
+}
+function closeDetail(){$('#modal').hidden=true;$('#modal').innerHTML=''}
+
+/* ---------- Timer ---------- */
+function beep(){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();var o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.setValueAtTime(.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);o.start();o.stop(ac.currentTime+.5)}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}
+}
+function tick(){
+  var left=Math.ceil((timerEnd-Date.now())/1000);
+  if(left<=0){clearInterval(timer);$('#tleft').textContent='Los!';beep();setTimeout(function(){if(Date.now()>=timerEnd)$('#timer').hidden=true},2500);return}
+  $('#tleft').textContent=Math.floor(left/60)+':'+pad(left%60);
+}
+function startTimer(sec){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
+  clearInterval(timer);timerEnd=Date.now()+sec*1000;$('#timer').hidden=false;tick();timer=setInterval(tick,250);
+}
+function stopTimer(){clearInterval(timer);timerEnd=0;$('#timer').hidden=true}
+
+/* ---------- Bestätigungsdialog ---------- */
+var askRes=null;
+function ask(msg,label){
+  return new Promise(function(res){
+    askRes=res;
+    $('#modal').innerHTML='<div class="modal" data-act="askov"><div class="sheet"><p style="margin:0 0 14px">'+esc(msg)+'</p><div class="hrow"><button data-act="askno">Abbrechen</button><button class="pri" data-act="askyes">'+esc(label||'OK')+'</button></div></div></div>';
+    $('#modal').hidden=false;
+  });
+}
+function answer(v){var r=askRes;askRes=null;closeDetail();if(r)r(v)}
+
+/* ---------- Aktionen ---------- */
+function startWorkout(dayId){
+  var day=S.plan.find(function(d){return d.id===dayId});if(!day)return;
+  var sets={};
+  day.exercises.forEach(function(e){var sg=suggest(e);sets[e.id]=[];for(var i=0;i<e.sets;i++)sets[e.id].push({w:fmt(sg.w),r:'',rir:String(targetRir(e)),done:false})});
+  S.draft={dayId:dayId,date:today(),sets:sets};save();render();window.scrollTo(0,0);
+}
+function toggleSet(exId,i){
+  var s=S.draft.sets[exId][i],e=findEx(exId);if(!s||!e)return;
+  var row=document.querySelector('[data-row="'+exId+'-'+i+'"]');
+  if(s.done){s.done=false}
+  else{
+    if(num(s.w)==null){toast('Bitte Gewicht eintragen');return}
+    if(num(s.r)==null){s.r=String(suggest(e).r);var ri=row.querySelector('[data-f="r"]');if(ri)ri.value=s.r}
+    s.done=true;startTimer(S.settings.rest||90);
+  }
+  row.classList.toggle('done',s.done);save();
+}
+function finish(){
+  var dr=S.draft,day=S.plan.find(function(d){return d.id===dr.dayId}),entries=[],items=[],any=false;
+  day.exercises.forEach(function(e){
+    var done=(dr.sets[e.id]||[]).filter(function(s){return s.done&&num(s.w)!=null&&num(s.r)!=null}).map(function(s){return {w:num(s.w),r:Math.round(num(s.r)),rir:(num(s.rir)==null?null:Math.min(10,Math.max(0,Math.round(num(s.rir)))))}});
+    if(done.length)any=true;
+    entries.push({exId:e.id,name:e.name,sets:done});
+  });
+  if(!any){ask('Keine Sätze abgehakt. Training verwerfen?','Verwerfen').then(function(y){if(y){S.draft=null;save();stopTimer();render()}});return}
+  entries.forEach(function(en){
+    if(!en.sets.length)return;
+    var e=findEx(en.exId),prev=entriesFor(en.exId),prevBest=0;
+    prev.forEach(function(p){prevBest=Math.max(prevBest,bestE1(p.sets))});
+    var nowBest=bestE1(en.sets);
+    items.push({exId:en.exId,name:en.name,sets:en.sets,pr:prev.length>0&&nowBest>prevBest+0.01,e:e});
+  });
+  S.logs.push({id:uid(),date:dr.date,dayId:dr.dayId,dayName:day.name,entries:entries});
+  S.draft=null;save();stopTimer();
+  items.forEach(function(it){it.next=suggest(it.e)});
+  summary={dayName:day.name,items:items};view='summary';render();window.scrollTo(0,0);
+}
+function loadDemo(){
+  S.logs=[];
+  S.plan.forEach(function(d,di){
+    for(var k=0;k<6;k++){
+      var dt=new Date();dt.setDate(dt.getDate()-((5-k)*7+di*2));
+      var iso=dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate()),entries=[];
+      d.exercises.forEach(function(e){
+        var sg=suggest(e),sets=[];
+        for(var i=0;i<e.sets;i++)sets.push({w:sg.w,r:Math.min(e.repMax,sg.r+2-(i===e.sets-1?1:0))});
+        entries.push({exId:e.id,name:e.name,sets:sets});
+      });
+      S.logs.push({id:uid(),date:iso,dayId:d.id,dayName:d.name,entries:entries});
+    }
+  });
+  save();view='train';render();toast('Beispieldaten geladen');
+}
+function move(arr,i,d){var j=i+d;if(j<0||j>=arr.length)return;var t=arr[i];arr[i]=arr[j];arr[j]=t}
+async function doExport(){
+  var json=JSON.stringify(S),name='gym-backup-'+today()+'.json';
+  try{var f=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});S.lastBackup=Date.now();save();render();return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(json);S.lastBackup=Date.now();save();toast('Backup in die Zwischenablage kopiert – z. B. in Notizen einfügen');render()}
+  catch(e){var t=$('#imp');if(t){t.value=json;t.select();toast('Text markiert – bitte kopieren')}}
+}
+function doImport(){
+  var t=$('#imp').value.trim();if(!t)return toast('Erst Backup-Text einfügen');
+  try{
+    var d=JSON.parse(t);if(!d||!Array.isArray(d.plan)||!Array.isArray(d.logs))throw 0;
+    ask('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?','Ersetzen').then(function(y){
+      if(!y)return;
+      d.settings=d.settings||{rest:90};S=d;save();toast('Backup wiederhergestellt');render();
+    });
+  }catch(e){toast('Das ist kein gültiges Backup')}
+}
+
+document.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-act]');if(!b)return;
+  var a=b.dataset.act,D=b.dataset;
+  if(a==='closeov'){if(ev.target===b)closeDetail();return}
+  if(a==='askov'){if(ev.target===b)answer(false);return}
+  if(a==='nav'){view=D.v;summary=null;closeDetail();render();window.scrollTo(0,0)}
+  else if(a==='start')startWorkout(D.d);
+  else if(a==='toggle')toggleSet(D.ex,+D.i);
+  else if(a==='addset'){var e=findEx(D.ex),arr=S.draft.sets[D.ex],lastS=arr[arr.length-1];arr.push({w:lastS?lastS.w:fmt(suggest(e).w),r:'',rir:String(targetRir(e)),done:false});save();var y=window.scrollY;render();window.scrollTo(0,y)}
+  else if(a==='delset'){var dArr=S.draft.sets[D.ex];if(dArr.length>1){dArr.pop();save();var y2=window.scrollY;render();window.scrollTo(0,y2)}else toast('Mindestens ein Satz bleibt')}
+  else if(a==='finish')finish();
+  else if(a==='cancel'){ask('Dieses Training verwerfen? Eingaben gehen verloren.','Verwerfen').then(function(y){if(y){S.draft=null;save();stopTimer();render()}})}
+  else if(a==='summaryok'){summary=null;view='train';render();window.scrollTo(0,0)}
+  else if(a==='detail')showDetail(D.ex);
+  else if(a==='closedetail')closeDetail();
+  else if(a==='dellog'){var lid=D.id;ask('Dieses Training aus dem Verlauf löschen?','Löschen').then(function(y){if(y){S.logs=S.logs.filter(function(l){return l.id!==lid});save();render()}})}
+  else if(a==='addday'){S.plan.push({id:uid(),name:'Neuer Tag',exercises:[]});save();render()}
+  else if(a==='delday'){var di=+D.d;ask('Diesen Trainingstag inkl. Übungen löschen? Bisherige Einheiten im Verlauf bleiben erhalten.','Löschen').then(function(y){if(y){S.plan.splice(di,1);save();render()}})}
+  else if(a==='addex'){S.plan[+D.d].exercises.push(ex('Neue Übung',3,8,12,2.5,20));save();render()}
+  else if(a==='delex'){S.plan[+D.d].exercises.splice(+D.e,1);save();render()}
+  else if(a==='exup'){move(S.plan[+D.d].exercises,+D.e,-1);save();render()}
+  else if(a==='exdown'){move(S.plan[+D.d].exercises,+D.e,1);save();render()}
+  else if(a==='tplus'){timerEnd+=15000;if($('#tleft').textContent==='Los!'){startTimer(15)}else tick()}
+  else if(a==='tstop')stopTimer();
+  else if(a==='export')doExport();
+  else if(a==='import')doImport();
+  else if(a==='wipe'){ask('Wirklich ALLE Daten löschen? Das kann nicht rückgängig gemacht werden. Hast du ein Backup?','Alles löschen').then(function(y){if(y){S=defaults();save();view='train';render()}})}
+  else if(a==='demo')loadDemo();
+  else if(a==='askyes')answer(true);
+  else if(a==='askno')answer(false);
+});
+document.addEventListener('input',function(ev){
+  var t=ev.target,k=t.dataset.in;if(!k)return;
+  if(k==='set'){var s=S.draft&&S.draft.sets[t.dataset.ex]&&S.draft.sets[t.dataset.ex][+t.dataset.i];if(s){s[t.dataset.f]=t.value;save()}}
+  else if(k==='rest'){var n=num(t.value);if(n&&n>=5&&n<=900){S.settings.rest=Math.round(n);save()}}
+  else if(k==='plan'){
+    var d=S.plan[+t.dataset.d],f=t.dataset.f;if(!d)return;
+    if(f==='dname'){d.name=t.value}
+    else{
+      var e=d.exercises[+t.dataset.e];if(!e)return;
+      if(f==='name')e.name=t.value;
+      else if(f==='howto')e.howto=t.value;
+      else{var n2=num(t.value);if(n2==null||n2<0)return;e[f]=(f==='inc'||f==='startWeight')?n2:(f==='rir'?Math.min(5,Math.max(0,Math.round(n2))):Math.max(1,Math.round(n2)))}
+    }
+    save();
+  }
+});
+
+if('serviceWorker' in navigator){
+  // Am Laptop (localhost) kein Offline-Cache, damit Änderungen sofort sichtbar sind.
+  var isLocal=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  window.addEventListener('load',function(){
+    if(isLocal){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}
+    else navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+render();
+})();
+</script>
+</body>
+</html>
